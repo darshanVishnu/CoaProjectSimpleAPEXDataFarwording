@@ -238,8 +238,53 @@ APEX_decode(APEX_CPU *cpu)
                 }
                 else
                 {
-                    stagestalled = 1;
+
+                    if (cpu->regs_valid_check[cpu->decode.rs1])
+                    {
+                        cpu->decode.rs1_value = cpu->regs[cpu->decode.rs1];
+                    }
+                    //excute data
+                    else if (cpu->dataForwardingLines[0] == cpu->decode.rs1)
+                    {
+
+                        cpu->decode.rs1_value = cpu->dataForwardingLinesdata[0];
+
+                    } //memory data
+                    else if (cpu->dataForwardingLines[1] == cpu->decode.rs1)
+                    {
+
+                        cpu->decode.rs1_value = cpu->dataForwardingLinesdata[1];
+                    }
+                    else
+                    {
+                        stagestalled = 1;
+                    }
+                    if (!stagestalled)
+                    {
+
+                        if (cpu->regs_valid_check[cpu->decode.rs2])
+                        {
+                            cpu->decode.rs2_value = cpu->regs[cpu->decode.rs2];
+                        }
+                        //excute data
+                        else if (cpu->dataForwardingLines[0] == cpu->decode.rs2)
+                        {
+
+                            cpu->decode.rs2_value = cpu->dataForwardingLinesdata[0];
+
+                        } //memory data
+                        else if (cpu->dataForwardingLines[1] == cpu->decode.rs2)
+                        {
+
+                            cpu->decode.rs2_value = cpu->dataForwardingLinesdata[1];
+                        }
+                        else
+                        {
+                            stagestalled = 1;
+                        }
+                    }
                 }
+
                 break;
             }
 
@@ -252,7 +297,24 @@ APEX_decode(APEX_CPU *cpu)
                 }
                 else
                 {
-                    stagestalled = 1;
+                    if (cpu->regs_valid_check[cpu->decode.rs1])
+                    {
+                        cpu->decode.rs1_value = cpu->regs[cpu->decode.rs1];
+                    }
+                    //excute data
+                    else if (cpu->dataForwardingLines[0] == cpu->decode.rs1)
+                    {
+                        cpu->decode.rs1_value = cpu->dataForwardingLinesdata[0];
+                    }
+                    //memory data
+                    else if (cpu->dataForwardingLines[1] == cpu->decode.rs1)
+                    {
+                        cpu->decode.rs1_value = cpu->dataForwardingLinesdata[1];
+                    }
+                    else
+                    {
+                        stagestalled = 1;
+                    }
                 }
                 break;
             }
@@ -266,8 +328,52 @@ APEX_decode(APEX_CPU *cpu)
                 }
                 else
                 {
-                    stagestalled = 1;
+                    if (cpu->regs_valid_check[cpu->decode.rs1])
+                    {
+                        cpu->decode.rs1_value = cpu->regs[cpu->decode.rs1];
+                    }
+                    //excute data
+                    else if (cpu->dataForwardingLines[0] == cpu->decode.rs1)
+                    {
+
+                        cpu->decode.rs1_value = cpu->dataForwardingLinesdata[0];
+
+                    } //memory data
+                    else if (cpu->dataForwardingLines[1] == cpu->decode.rs1)
+                    {
+
+                        cpu->decode.rs1_value = cpu->dataForwardingLinesdata[1];
+                    }
+                    else
+                    {
+                        stagestalled = 1;
+                    }
+                    if (!stagestalled)
+                    {
+
+                        if (cpu->regs_valid_check[cpu->decode.rs2])
+                        {
+                            cpu->decode.rs2_value = cpu->regs[cpu->decode.rs2];
+                        }
+                        //  excute data
+                        else if (cpu->dataForwardingLines[0] == cpu->decode.rs2)
+                        {
+
+                            cpu->decode.rs2_value = cpu->dataForwardingLinesdata[0];
+
+                        } //memory data
+                        else if (cpu->dataForwardingLines[1] == cpu->decode.rs2)
+                        {
+
+                            cpu->decode.rs2_value = cpu->dataForwardingLinesdata[1];
+                        }
+                        else
+                        {
+                            stagestalled = 1;
+                        }
+                    }
                 }
+
                 break;
             }
             case OPCODE_STR:
@@ -281,11 +387,78 @@ APEX_decode(APEX_CPU *cpu)
                 }
                 else
                 {
-                    stagestalled = 1;
+                    if (cpu->regs_valid_check[cpu->decode.rs1])
+                    {
+                        cpu->decode.rs1_value = cpu->regs[cpu->decode.rs1];
+                    }
+                    //excute data
+                    else if (cpu->dataForwardingLines[0] == cpu->decode.rs1)
+                    {
+
+                        cpu->decode.rs1_value = cpu->dataForwardingLinesdata[0];
+
+                    } //memory data
+                    else if (cpu->dataForwardingLines[1] == cpu->decode.rs1)
+                    {
+
+                        cpu->decode.rs1_value = cpu->dataForwardingLinesdata[1];
+                    }
+                    else
+                    {
+                        stagestalled = 1;
+                    }
+                    if (!stagestalled)
+                    {
+
+                        if (cpu->regs_valid_check[cpu->decode.rs2])
+                        {
+                            cpu->decode.rs2_value = cpu->regs[cpu->decode.rs2];
+                        }
+                        //  excute data
+                        else if (cpu->dataForwardingLines[0] == cpu->decode.rs2)
+                        {
+
+                            cpu->decode.rs2_value = cpu->dataForwardingLinesdata[0];
+
+                        } //memory data
+                        else if (cpu->dataForwardingLines[1] == cpu->decode.rs2)
+                        {
+
+                            cpu->decode.rs2_value = cpu->dataForwardingLinesdata[1];
+                        }
+                        else
+                        {
+                            stagestalled = 1;
+                        }
+                        if (!stagestalled)
+                        {
+
+                            if (cpu->regs_valid_check[cpu->decode.rs3])
+                            {
+                                cpu->decode.rs3_value = cpu->regs[cpu->decode.rs3];
+                            }
+                            //  excute data
+                            else if (cpu->dataForwardingLines[0] == cpu->decode.rs3)
+                            {
+
+                                cpu->decode.rs3_value = cpu->dataForwardingLinesdata[0];
+
+                            } //memory data
+                            else if (cpu->dataForwardingLines[1] == cpu->decode.rs3)
+                            {
+
+                                cpu->decode.rs3_value = cpu->dataForwardingLinesdata[1];
+                            }
+                            else
+                            {
+                                stagestalled = 1;
+                            }
+                        }
+                    }
                 }
+
                 break;
             }
-
             case OPCODE_LOAD:
             {
                 if (cpu->regs_valid_check[cpu->decode.rs1])
@@ -588,6 +761,11 @@ APEX_execute(APEX_CPU *cpu)
                 cpu->decode.has_insn = FALSE;
                 cpu->fetch.has_insn = FALSE;
             }
+            if (cpu->execute.rd < 16 && cpu->execute.rd >= 0)
+            {
+                cpu->dataForwardingLines[0] = cpu->execute.rd;
+                cpu->dataForwardingLinesdata[0] = cpu->execute.result_buffer;
+            }
         }
         if (ENABLE_DEBUG_MESSAGES)
         {
@@ -648,6 +826,11 @@ APEX_memory(APEX_CPU *cpu)
             /* Copy data from memory latch to writeback latch*/
             cpu->writeback = cpu->memory;
             cpu->memory.has_insn = FALSE;
+            if (cpu->memory.rd < 16 && cpu->memory.rd >= 0)
+            {
+                cpu->dataForwardingLines[1] = cpu->memory.rd;
+                cpu->dataForwardingLinesdata[1] = cpu->memory.result_buffer;
+            }
         }
         if (ENABLE_DEBUG_MESSAGES)
         {
