@@ -40,7 +40,7 @@
 #define OPCODE_NOP 0x12
 
 /* Set this flag to 1 to enable debug messages */
-#define ENABLE_DEBUG_MESSAGES 1
+//#define ENABLE_DEBUG_MESSAGES 1
 
 /* Set this flag to 1 to enable cycle single-step mode */
 #define ENABLE_SINGLE_STEP 1

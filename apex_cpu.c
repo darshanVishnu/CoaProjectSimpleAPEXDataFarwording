@@ -12,6 +12,7 @@
 
 #include "apex_cpu.h"
 #include "apex_macros.h"
+int ENABLE_DEBUG_MESSAGES = 1;
 
 /* Converts the PC(4000 series) into array index for code memory
  *
@@ -1176,10 +1177,19 @@ APEX_cpu_init(const char *filename)
  *
  * Note: You are free to edit this function according to your implementation
  */
-void APEX_cpu_run(APEX_CPU *cpu)
+void APEX_cpu_run(APEX_CPU *cpu, int displayIn, int cyclesnumberIn)
 {
     char user_prompt_val;
-
+    if (displayIn == 1)
+    {
+        ENABLE_DEBUG_MESSAGES = 1;
+        cpu->single_step = 0;
+    }
+    else
+    {
+        ENABLE_DEBUG_MESSAGES = 0;
+        cpu->single_step = 0;
+    }
     while (TRUE)
     {
         if (ENABLE_DEBUG_MESSAGES)
@@ -1200,26 +1210,35 @@ void APEX_cpu_run(APEX_CPU *cpu)
         APEX_execute(cpu);
         APEX_decode(cpu);
         APEX_fetch(cpu);
-
-        print_reg_file(cpu);
+        if (displayIn)
+            print_reg_file(cpu);
 
         if (cpu->single_step)
         {
+            print_reg_file(cpu);
+
             printf("Press any key to advance CPU Clock or <q> to quit:\n");
             scanf("%c", &user_prompt_val);
 
             if ((user_prompt_val == 'Q') || (user_prompt_val == 'q'))
             {
-                printf("APEX_CPU: Simulation Stopped, cycles = %d instructions = %d\n", cpu->clock, cpu->insn_completed);
+                printf("APEX_CPU: Simulation Stopped, cycles = %d instructions = %d\n", cpu->clock + 1, cpu->insn_completed);
                 break;
             }
+        }
+        else if (cyclesnumberIn == (cpu->clock + 1))
+        {
+            printf("APEX_CPU: Simulation Stopped, cycles = %d instructions = %d\n", cpu->clock + 1, cpu->insn_completed);
+            // print_reg_file(cpu);
+            printregstate(cpu);
+            printdatamemory(cpu);
+            break;
         }
 
         cpu->clock++;
     }
-}
 
-/*
+} /*
  * This function deallocates APEX CPU.
  *
  * Note: You are free to edit this function according to your implementation
@@ -1228,4 +1247,31 @@ void APEX_cpu_stop(APEX_CPU *cpu)
 {
     free(cpu->code_memory);
     free(cpu);
+}
+void printdatamemory(APEX_CPU *cpu)
+{
+    printf("============== STATE OF DATA MEMORY =============\n");
+
+    for (int count = 0; count < 100; count++)
+    {
+        printf("|           MEM[%d]       |     Data  Value=%d        |\n", count, cpu->data_memory[count]);
+    }
+}
+void printregstate(APEX_CPU *cpu)
+{
+    printf("=============== STATE OF ARCHITECTURAL REGISTER FILE ==========\n");
+
+    int registersNumber = 16;
+    for (int count = 0; count < registersNumber; count++)
+    {
+        if (cpu->regs_valid_check[count] == 1)
+        {
+            //  printf("|    REG[%d] |       Value=%d  |       STATUS=%s   |\n", count, cpu->regs[count], (cpu->regs_valid_check[count] ? "VALID  " : "INVALID"));
+            printf("|    REG[%d] |       Value=%d  |       STATUS=%s   |\n", count, cpu->regs[count], "VALID  ");
+        }
+        else
+        {
+            printf("|    REG[%d] |       Value=%d  |       STATUS=%s   |\n", count, cpu->regs[count], "INVALID  ");
+        }
+    }
 }
