@@ -100,6 +100,11 @@ print_instruction(const CPU_Stage *stage)
         printf("%s", stage->opcode_str);
         break;
     }
+    case OPCODE_NOP:
+    {
+        printf("%s", stage->opcode_str);
+        break;
+    }
     }
 }
 
@@ -152,7 +157,7 @@ APEX_fetch(APEX_CPU *cpu)
 
     if (cpu->fetch.has_insn)
     {
-        if (!cpu->fetch.busy && !cpu->fetch.stalled)
+        if (!cpu->fetch.stalled)
         {
 
             /* This fetches new branch target instruction from next cycle */
@@ -195,12 +200,21 @@ APEX_fetch(APEX_CPU *cpu)
             {
                 cpu->fetch.stalled = 1;
             }
+            if (ENABLE_DEBUG_MESSAGES)
+            {
+                print_stage_content("Instruction at Fetch____________Stage--->", &cpu->fetch);
+            }
         }
 
-        if (ENABLE_DEBUG_MESSAGES)
+        else if (ENABLE_DEBUG_MESSAGES)
         {
-            print_stage_content("Fetch", &cpu->fetch);
+            print_stage_content("Instruction at Fetch____________Stage--->", &cpu->fetch);
         }
+    }
+    else if (ENABLE_DEBUG_MESSAGES)
+    {
+        printf("Instruction at Fetch____________Stage---> : empty");
+        printf("\n");
     }
 }
 
@@ -215,7 +229,7 @@ APEX_decode(APEX_CPU *cpu)
     cpu->decode.stalled = 0;
     if (cpu->decode.has_insn)
     {
-        if (!cpu->decode.busy && !cpu->decode.stalled)
+        if (!cpu->decode.stalled)
         {
             int stagestalled = 0;
 
@@ -467,7 +481,24 @@ APEX_decode(APEX_CPU *cpu)
                 }
                 else
                 {
-                    stagestalled = 1;
+                    if (cpu->regs_valid_check[cpu->decode.rs1])
+                    {
+                        cpu->decode.rs1_value = cpu->regs[cpu->decode.rs1];
+                    }
+                    //excute data
+                    else if (cpu->dataForwardingLines[0] == cpu->decode.rs1)
+                    {
+                        cpu->decode.rs1_value = cpu->dataForwardingLinesdata[0];
+                    }
+                    //memory data
+                    else if (cpu->dataForwardingLines[1] == cpu->decode.rs1)
+                    {
+                        cpu->decode.rs1_value = cpu->dataForwardingLinesdata[1];
+                    }
+                    else
+                    {
+                        stagestalled = 1;
+                    }
                 }
                 break;
             }
@@ -480,7 +511,50 @@ APEX_decode(APEX_CPU *cpu)
                 }
                 else
                 {
-                    stagestalled = 1;
+                    if (cpu->regs_valid_check[cpu->decode.rs1])
+                    {
+                        cpu->decode.rs1_value = cpu->regs[cpu->decode.rs1];
+                    }
+                    //excute data
+                    else if (cpu->dataForwardingLines[0] == cpu->decode.rs1)
+                    {
+
+                        cpu->decode.rs1_value = cpu->dataForwardingLinesdata[0];
+
+                    } //memory data
+                    else if (cpu->dataForwardingLines[1] == cpu->decode.rs1)
+                    {
+
+                        cpu->decode.rs1_value = cpu->dataForwardingLinesdata[1];
+                    }
+                    else
+                    {
+                        stagestalled = 1;
+                    }
+                    if (!stagestalled)
+                    {
+
+                        if (cpu->regs_valid_check[cpu->decode.rs2])
+                        {
+                            cpu->decode.rs2_value = cpu->regs[cpu->decode.rs2];
+                        }
+                        //excute data
+                        else if (cpu->dataForwardingLines[0] == cpu->decode.rs2)
+                        {
+
+                            cpu->decode.rs2_value = cpu->dataForwardingLinesdata[0];
+
+                        } //memory data
+                        else if (cpu->dataForwardingLines[1] == cpu->decode.rs2)
+                        {
+
+                            cpu->decode.rs2_value = cpu->dataForwardingLinesdata[1];
+                        }
+                        else
+                        {
+                            stagestalled = 1;
+                        }
+                    }
                 }
                 break;
             }
@@ -490,12 +564,18 @@ APEX_decode(APEX_CPU *cpu)
                 break;
             }
             case OPCODE_HALT:
+            case OPCODE_NOP:
             {
-                /* MOVC doesn't have register operands */
+                /* HALT doesn't have register operands */
                 break;
             }
             }
-
+            /*dataForwardingLines are cleared and set to-1*/
+            for (int count = 0; count < 3; count++)
+            {
+                cpu->dataForwardingLines[count] = -1;
+                cpu->dataForwardingLinesdata[count] = -1;
+            }
             if (stagestalled)
             {
                 cpu->decode.stalled = 1;
@@ -508,11 +588,20 @@ APEX_decode(APEX_CPU *cpu)
                 //Fetch
                 cpu->fetch.stalled = 0;
             }
+            if (ENABLE_DEBUG_MESSAGES)
+            {
+                print_stage_content("Instruction at Decode/RF_________Stage---->", &cpu->decode);
+            }
         }
-        if (ENABLE_DEBUG_MESSAGES)
+        else if (ENABLE_DEBUG_MESSAGES)
         {
-            print_stage_content("Decode/RF", &cpu->decode);
+            print_stage_content("Instruction at Decode/RF________Stage---->", &cpu->decode);
         }
+    }
+    else if (ENABLE_DEBUG_MESSAGES)
+    {
+        printf("Instruction at Decode/RF________Stage---->: empty");
+        printf("\n");
     }
 }
 
@@ -527,7 +616,7 @@ APEX_execute(APEX_CPU *cpu)
 
     if (cpu->execute.has_insn)
     {
-        if (!cpu->execute.busy && !cpu->execute.stalled)
+        if (!cpu->execute.stalled)
         {
             if (cpu->execute.rd < 16 && cpu->execute.rd >= 0)
             {
@@ -750,6 +839,12 @@ APEX_execute(APEX_CPU *cpu)
             {
                 cpu->execute.result_buffer = cpu->execute.imm + 0;
             }
+            case OPCODE_NOP:
+            case OPCODE_HALT:
+            {
+                /* HALT doesn't have register operands */
+                break;
+            }
             }
 
             /* Copy data from execute latch to memory latch*/
@@ -766,11 +861,21 @@ APEX_execute(APEX_CPU *cpu)
                 cpu->dataForwardingLines[0] = cpu->execute.rd;
                 cpu->dataForwardingLinesdata[0] = cpu->execute.result_buffer;
             }
+
+             if (ENABLE_DEBUG_MESSAGES)
+            {
+                print_stage_content("Instruction at Execute ___________Stage---> ", &cpu->execute);
+            }
         }
-        if (ENABLE_DEBUG_MESSAGES)
+        else if (ENABLE_DEBUG_MESSAGES)
         {
-            print_stage_content("Execute", &cpu->execute);
+            print_stage_content("Instruction at Execute ___________Stage---> ", &cpu->execute);
         }
+    }
+    else if (ENABLE_DEBUG_MESSAGES)
+    {
+        printf("Instruction at Execute __________Stage--->: empty");
+        printf("\n");
     }
 }
 
@@ -785,7 +890,7 @@ APEX_memory(APEX_CPU *cpu)
 
     if (cpu->memory.has_insn)
     {
-        if (!cpu->memory.busy && !cpu->memory.stalled)
+        if (!cpu->memory.stalled)
         {
             if (cpu->memory.rd < 16 && cpu->memory.rd >= 0)
             {
@@ -802,6 +907,7 @@ APEX_memory(APEX_CPU *cpu)
             case OPCODE_AND:
             case OPCODE_OR:
             case OPCODE_XOR:
+            case OPCODE_NOP:
 
             {
                 /* No work for ADD */
@@ -831,11 +937,20 @@ APEX_memory(APEX_CPU *cpu)
                 cpu->dataForwardingLines[1] = cpu->memory.rd;
                 cpu->dataForwardingLinesdata[1] = cpu->memory.result_buffer;
             }
+            if (ENABLE_DEBUG_MESSAGES)
+            {
+                print_stage_content("Instruction at Memory ___________Stage--->", &cpu->memory);
+            }
         }
-        if (ENABLE_DEBUG_MESSAGES)
+        else if (ENABLE_DEBUG_MESSAGES)
         {
-            print_stage_content("Memory", &cpu->memory);
+            print_stage_content("Instruction at Memory ___________Stage--->", &cpu->memory);
         }
+    }
+    else if (ENABLE_DEBUG_MESSAGES)
+    {
+        printf("Instruction at Memory ___________Stage---> : empty");
+        printf("\n");
     }
 }
 
@@ -850,7 +965,7 @@ APEX_writeback(APEX_CPU *cpu)
 
     if (cpu->writeback.has_insn)
     {
-        if (!cpu->writeback.busy && !cpu->writeback.stalled)
+        if (!cpu->writeback.stalled)
         {
             if (cpu->writeback.rd < 16 && cpu->writeback.rd >= 0)
             {
@@ -880,14 +995,23 @@ APEX_writeback(APEX_CPU *cpu)
                 cpu->regs[cpu->writeback.rd] = cpu->writeback.result_buffer;
                 break;
             }
+
+            case OPCODE_NOP:
+            {
+                break;
+            }
             }
 
             cpu->insn_completed++;
             cpu->writeback.has_insn = FALSE;
+            if (ENABLE_DEBUG_MESSAGES)
+            {
+                print_stage_content("Instruction at Writeback ________Stage--->", &cpu->writeback);
+            }
         }
-        if (ENABLE_DEBUG_MESSAGES)
+        else if (ENABLE_DEBUG_MESSAGES)
         {
-            print_stage_content("Writeback", &cpu->writeback);
+            print_stage_content("Instruction at Writeback ________Stage--->", &cpu->writeback);
         }
 
         if (cpu->writeback.opcode == OPCODE_HALT)
@@ -895,6 +1019,11 @@ APEX_writeback(APEX_CPU *cpu)
             /* Stop the APEX simulator */
             return TRUE;
         }
+    }
+    else if (ENABLE_DEBUG_MESSAGES)
+    {
+        printf("Instruction at Writeback ________Stage---> :empty");
+        printf("\n");
     }
     /* Default */
     return 0;
@@ -944,14 +1073,14 @@ APEX_cpu_init(const char *filename)
                 cpu->code_memory_size);
         fprintf(stderr, "APEX_CPU: PC initialized to %d\n", cpu->pc);
         fprintf(stderr, "APEX_CPU: Printing Code Memory\n");
-        printf("%-9s %-9s %-9s %-9s %-9s\n", "opcode_str", "rd", "rs1", "rs2",
+        printf("%-9s %-9s %-9s %-9s %-9s %-9s\n", "opcode_str", "rd", "rs1", "rs2", "rs3",
                "imm");
 
         for (i = 0; i < cpu->code_memory_size; ++i)
         {
-            printf("%-9s %-9d %-9d %-9d %-9d\n", cpu->code_memory[i].opcode_str,
+            printf("%-9s %-9d %-9d %-9d %-9d %-9d\n", cpu->code_memory[i].opcode_str,
                    cpu->code_memory[i].rd, cpu->code_memory[i].rs1,
-                   cpu->code_memory[i].rs2, cpu->code_memory[i].imm);
+                   cpu->code_memory[i].rs2, cpu->code_memory[i].rs3, cpu->code_memory[i].imm);
         }
     }
 
@@ -974,14 +1103,14 @@ void APEX_cpu_run(APEX_CPU *cpu)
         if (ENABLE_DEBUG_MESSAGES)
         {
             printf("--------------------------------------------\n");
-            printf("Clock Cycle #: %d\n", cpu->clock);
+            printf("Clock Cycle #: %d\n", cpu->clock + 1);
             printf("--------------------------------------------\n");
         }
 
         if (APEX_writeback(cpu))
         {
             /* Halt in writeback stage */
-            printf("APEX_CPU: Simulation Complete, cycles = %d instructions = %d\n", cpu->clock, cpu->insn_completed);
+            printf("APEX_CPU: Simulation Complete, cycles = %d instructions = %d\n", cpu->clock + 1, cpu->insn_completed);
             break;
         }
 

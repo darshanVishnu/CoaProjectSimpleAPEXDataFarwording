@@ -40,7 +40,6 @@ typedef struct CPU_Stage
     int result_buffer;
     int memory_address;
     int has_insn;
-    int busy;    // Flag  stage is performing some action
     int stalled; // Flag  stage is stalled
 } CPU_Stage;
 
