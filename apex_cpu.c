@@ -10,6 +10,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <assert.h>
+
 #include "apex_cpu.h"
 #include "apex_macros.h"
 int ENABLE_DEBUG_MESSAGES = 1;
@@ -884,6 +886,13 @@ APEX_execute(APEX_CPU *cpu)
                 {
                     /* Calculate new PC, and send it to fetch unit */
                     cpu->pc = cpu->execute.pc + cpu->execute.imm;
+                    int inspointer = (cpu->pc - 4000) / 4;
+                    // printf ("%d",cpu->pc);
+                    if (!(cpu->execute.imm % 4 == 0 && inspointer < cpu->code_memory_size && inspointer >= 0))
+                    {
+                        printf("Check the address value  ");
+                    }
+                    assert(cpu->execute.imm % 4 == 0 && inspointer < cpu->code_memory_size && inspointer >= 0);
 
                     /* Since we are using reverse callbacks for pipeline stages,
                      * this will prevent the new instruction from being fetched in the current cycle*/
@@ -904,6 +913,15 @@ APEX_execute(APEX_CPU *cpu)
                 {
                     /* Calculate new PC, and send it to fetch unit */
                     cpu->pc = cpu->execute.pc + cpu->execute.imm;
+
+                    int inspointer = (cpu->pc - 4000) / 4;
+                    // printf ("%d",cpu->pc);
+                    if (!(cpu->execute.imm % 4 == 0 && inspointer < cpu->code_memory_size && inspointer >= 0))
+                    {
+                        printf("Check the address value  ");
+                    }
+                    assert(cpu->execute.imm % 4 == 0 && inspointer < cpu->code_memory_size && inspointer >= 0);
+
 
                     /* Since we are using reverse callbacks for pipeline stages,
                      * this will prevent the new instruction from being fetched in the current cycle*/
