@@ -1221,6 +1221,8 @@ void APEX_cpu_run(APEX_CPU *cpu, int displayIn, int cyclesnumberIn)
         {
             /* Halt in writeback stage */
             printf("APEX_CPU: Simulation Complete, cycles = %d instructions = %d\n", cpu->clock + 1, cpu->insn_completed);
+            printregstate(cpu);
+            printdatamemory(cpu);
             break;
         }
 
